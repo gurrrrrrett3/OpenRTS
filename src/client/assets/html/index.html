@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/client" defer></script>
+    <title>OpenRTS</title>
+  </head>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+  </style>
+
+  <noscript>
+    <h1>JavaScript is required to run OpenRTS.</h1>
+    <h2>No idea what kind of browser you're running,</h2>
+    <h3>Or how you expect me to run a game without it.</h3>
+  </noscript>
+
+  <body>
+    <canvas id="game"></canvas>
+  </body>
+
+  <script>
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      alert("OpenRTS is not optimized for mobile devices, plus you need a keyboard to play OpenRTS. Sorry!");
+    }
+  </script>
+</html>
