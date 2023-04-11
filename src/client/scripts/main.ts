@@ -1,11 +1,19 @@
 import AssetManager from "./core/assets/assetManager";
-import DragManager from "./core/controls/dragManager";
-import ScreenEventManager from "./core/screenEvents";
+import CameraControls from "./core/controls/cameraControls";
+import DragControls from "./core/controls/dragControls";
+import ScrollControls from "./core/controls/zoomControls";
+import EventManager from "./core/events";
+import ScreenManager, { GameMode } from "./core/screens/screenManager";
 import "./core/socket/socket";
 import Env from "./game/env/envRender";
+import { Tilemap } from "./game/env/tilemap";
 import DebugTools from "./utils/debugTools";
 import CLogger from "./utils/logger";
+import Utils from "./utils/utils";
 
+/**
+ * Change this to "production" when building for production
+ */
 export const MODE = "development";
 
 export default class Main {
@@ -43,9 +51,46 @@ export default class Main {
   public updateTime = 0;
   public frameTime = 0;
 
-  public cameraX = 0;
-  public cameraY = 0;
+  public cameraSubX = 0;
+  public cameraSubY = 0;
+
+  public get cameraX() {
+    return Math.floor(this.cameraSubX);
+  }
+
+  public get cameraY() {
+    return Math.floor(this.cameraSubY);
+  }
+
   public zoomLevel = 1;
+
+  public get mouseWorld() {
+    return Utils.screenToWorld(this.mouseX, this.mouseY);
+  }
+
+  public get selectedTile() {
+
+    const tile = {
+      x: Math.floor(this.mouseWorld.x / 16),
+      y: Math.floor(this.mouseWorld.y / 16),
+    }
+
+    return {
+      tile,
+      world: {
+        x: tile.x * 16,
+        y: tile.y * 16,
+      },
+      screen: {
+        x: Utils.worldToScreen(tile.x * 16, tile.y * 16).x,
+        y: Utils.worldToScreen(tile.x * 16, tile.y * 16).y,
+      },
+    }
+  }
+
+  public screen: GameMode = GameMode.LOADING;
+
+  public tilemap = new Tilemap(100, 100)
 
   constructor() {}
 
@@ -66,7 +111,7 @@ export default class Main {
       this.canvas.width = this.width;
       this.canvas.height = this.height;
 
-      ScreenEventManager.instance.emit("load");
+      EventManager.instance.emit("load");
 
       AssetManager.loadAssets()
     });
@@ -75,7 +120,7 @@ export default class Main {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
 
-      ScreenEventManager.instance.emit("resize", {
+      EventManager.instance.emit("resize", {
         width: this.width,
         height: this.height,
       });
@@ -103,7 +148,7 @@ export default class Main {
       }
       event.preventDefault();
 
-      ScreenEventManager.instance.emit("click", {
+      EventManager.instance.emit("click", {
         clickStatus: this.mouseButtons,
         x: this.mouseX,
         y: this.mouseY,
@@ -124,7 +169,7 @@ export default class Main {
         }
 
         if (this.mouseButtons.left === false && this.mouseButtons.right === false && this.mouseButtons.middle === false) {
-          ScreenEventManager.instance.emit("release", {
+          EventManager.instance.emit("release", {
             x: this.mouseX,
             y: this.mouseY,
           });
@@ -132,17 +177,10 @@ export default class Main {
     })
 
     window.addEventListener("wheel", (event) => {
-      if (event.deltaY > 0) {
-        this.zoomLevel -= 0.1;
-      } else {
-        this.zoomLevel += 0.1;
-      }
-      if (this.zoomLevel < 0.1) {
-        this.zoomLevel = 0.1;
-      }
-      if (this.zoomLevel > 10) {
-        this.zoomLevel = 10;
-      }
+      EventManager.instance.emit("scroll", {
+        dx: event.deltaX,
+        dy: event.deltaY,
+      });
     })
 
     // disable right click context menu
@@ -152,11 +190,17 @@ export default class Main {
 
     // Misc Managers
     DebugTools.init()
-    DragManager.init();
+    ScreenManager.init();  
+
+    // Controls
+    DragControls.init();
+    ScrollControls.init();
+    CameraControls.init();
 
     // stuff to start after assets
-    ScreenEventManager.instance.once("assetsLoaded", () => {
+    EventManager.instance.once("assetsLoaded", () => {
       Env.init();
+      this.screen = GameMode.MAIN_MENU;
     });
 
     // start loop
@@ -165,12 +209,12 @@ export default class Main {
   }
 
   public update(): void {
-    ScreenEventManager.instance.emit("update");
+    EventManager.instance.emit("update");
   }
 
   public draw(): void {
     this.ctx.clearRect(0, 0, this.width, this.height);
-    ScreenEventManager.instance.emit("draw");
+    EventManager.instance.emit("draw");
   }
   
   public loop(): void {

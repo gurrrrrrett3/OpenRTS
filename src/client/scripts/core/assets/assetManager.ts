@@ -1,7 +1,7 @@
 import Pack from "../../../../common/assets/pack/pack-client";
-import Utils from "../../utils";
+import Utils from "../../utils/utils";
 import CLogger from "../../utils/logger";
-import ScreenEventManager from "../screenEvents";
+import ScreenEventManager from "../events";
 
 export default class AssetManager {
   public static assets: Map<string, ArrayBuffer> = new Map();
@@ -52,5 +52,15 @@ export default class AssetManager {
     const dataUrl = Utils.arrayBufferToDataUrl(asset, "image/png");
     AssetManager.dataUrlCache.set(key, dataUrl);
     return dataUrl;
+  }
+
+  public static getAllAssetsFromFolder(folder: string) {
+    const assets = new Map<string, ArrayBuffer>();
+    for (const key of AssetManager.assets.keys()) {
+      if (key.startsWith(folder)) {
+        assets.set(key, AssetManager.assets.get(key) as ArrayBuffer);
+      }
+    }
+    return assets;
   }
 }

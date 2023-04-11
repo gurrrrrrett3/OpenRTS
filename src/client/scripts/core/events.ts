@@ -1,8 +1,7 @@
 import { MouseButtonStatus } from "../../types";
 import CLogger from "../utils/logger";
-import DragManager from "./controls/dragManager";
 
-export interface ScreenEvents {
+export interface Events {
   // load data
   load: void;
   unload: void;
@@ -17,6 +16,10 @@ export interface ScreenEvents {
   release: {
     x: number;
     y: number;
+  };
+  scroll: {
+    dx: number;
+    dy: number;
   };
 
   // drag events
@@ -35,6 +38,10 @@ export interface ScreenEvents {
       x: number;
       y: number;
     };
+    delta: {
+      x: number;
+      y: number;
+    }
   };
   endDrag: {
     start: {
@@ -62,17 +69,22 @@ export interface ScreenEvents {
   assetsLoaded: void;
 }
 
-export type ScreenEvent = keyof ScreenEvents;
-export type ScreenEventCallback<T extends ScreenEvent> = (event: ScreenEvents[T]) => void;
+export type ScreenEvent = keyof Events;
+export type ScreenEventCallback<T extends ScreenEvent> = (event: Events[T]) => void;
 
-export default class ScreenEventManager {
-  private static _screenEventManager: ScreenEventManager;
+/**
+ * EventManager
+ * Manages game Events
+ */
+export default class EventManager {
+  private static _EventManager: EventManager;
 
   private static eventNames: ScreenEvent[] = [
     "load",
     "unload",
     "click",
     "release",
+    "scroll",
     "startDrag",
     "dragFrame",
     "endDrag",
@@ -82,11 +94,11 @@ export default class ScreenEventManager {
     "assetsLoaded",
   ];
 
-  public static get instance(): ScreenEventManager {
-    if (!this._screenEventManager) {
-      this._screenEventManager = new ScreenEventManager();
+  public static get instance(): EventManager {
+    if (!this._EventManager) {
+      this._EventManager = new EventManager();
     }
-    return this._screenEventManager;
+    return this._EventManager;
   }
 
   private _events: {
@@ -99,11 +111,17 @@ export default class ScreenEventManager {
   private constructor() {
     this._events = {} as any;
 
-    ScreenEventManager.eventNames.forEach((eventName) => {
+    EventManager.eventNames.forEach((eventName) => {
       this._events[eventName] = [];
     });
   }
 
+  /**
+   * Register a callback for a screen event
+   * @param event Event name
+   * @param callback Callback function
+   * @param priority Priority of the callback. Higher priority callbacks are called first.
+   */
   public on<T extends ScreenEvent>(event: T, callback: ScreenEventCallback<T>, priority?: number): void {
     this._events[event].push({
       callback,
@@ -113,13 +131,19 @@ export default class ScreenEventManager {
     this._sortEvents(event);
 
     CLogger.debug(
-      "ScreenEventManager",
+      "EventManager",
       `registered callback for event ${event} | ${this._events[event].length} callbacks`
     );
   }
 
+  /**
+   * Register a callback for a screen event that is only called once
+   * @param event Event name
+   * @param callback Callback function
+   * @param priority Priority of the callback. Higher priority callbacks are called first.
+   */
   public once<T extends ScreenEvent>(event: T, callback: ScreenEventCallback<T>, priority?: number): void {
-    const onceCallback = (data: ScreenEvents[T]) => {
+    const onceCallback = (data: Events[T]) => {
       callback(data);
       this.off(event, onceCallback);
     };
@@ -127,14 +151,19 @@ export default class ScreenEventManager {
     this.on(event, onceCallback, priority);
   }
 
+  /**
+   * Remove a callback for a screen event
+   * @param event Event name
+   * @param callback Callback function to remove
+   */
   public off<T extends ScreenEvent>(event: T, callback: ScreenEventCallback<T>): void {
     // @ts-ignore
     this._events[event] = this._events[event].filter((cb) => cb !== callback);
   }
 
   public emit<T extends ScreenEvent>(event: T): void;
-  public emit<T extends ScreenEvent>(event: T, data: ScreenEvents[T]): void;
-  public emit<T extends ScreenEvent>(event: T, data?: ScreenEvents[T]): void {
+  public emit<T extends ScreenEvent>(event: T, data: Events[T]): void;
+  public emit<T extends ScreenEvent>(event: T, data?: Events[T]): void {
     this._events[event].forEach((callback) => {
       if (data) {
         callback.callback(data);
@@ -144,12 +173,18 @@ export default class ScreenEventManager {
     });
   }
 
+  /**
+   * Clear all callbacks for all events
+   */
   public clear(): void {
-    ScreenEventManager.eventNames.forEach((eventName) => {
+    EventManager.eventNames.forEach((eventName) => {
       this._events[eventName] = [];
     });
   }
 
+  /**
+   * Get all registered events
+   */
   public get events(): {
     [key in ScreenEvent]: {
       callback: ScreenEventCallback<key>;

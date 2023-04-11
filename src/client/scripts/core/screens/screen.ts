@@ -1,12 +1,15 @@
+import Layout from "../gui/layout";
+import { GameMode } from "./screenManager";
+
 export default abstract class Screen {
+  public abstract id: GameMode;
+  public abstract layout: Layout;
 
-    public assets: {
-        textures: string[],
-    } = {
-        textures: [],
-    };
+  public abstract onEnter(): void;
+  public abstract onExit(): void;
 
-    public abstract load(): void;
-    public abstract unload(): void;  
-
+  public draw(): void {
+    this.layout.draw();
+  }
+  
 }

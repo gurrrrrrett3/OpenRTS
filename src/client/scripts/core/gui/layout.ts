@@ -1,3 +1,4 @@
+import Element from "./element";
 
 /**
  * Layout
@@ -5,9 +6,24 @@
  */
 export default class Layout {
 
-    
-    constructor() {
+    public elements: Element[] = [];
 
+    constructor() {
+        
+    }
+
+    public addElement(element: Element): void {
+        this.elements.push(element);
+    }
+
+    public removeElement(element: Element): void {
+        this.elements.splice(this.elements.indexOf(element), 1);
+    }
+
+    public draw(): void {
+        this.elements.forEach((element) => {
+            element.draw();
+        });
     }
 
 }
