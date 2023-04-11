@@ -26,4 +26,10 @@ export default class Layout {
         });
     }
 
+    public update(): void {
+        this.elements.forEach((element) => {
+            element.update();
+        });
+    }
+
 }

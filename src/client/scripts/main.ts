@@ -92,6 +92,10 @@ export default class Main {
 
   public tilemap = new Tilemap(100, 100)
 
+  public set cursor(cursor: string) {
+    this.canvas.style.cursor = cursor;
+  }
+
   constructor() {}
 
   public init(): void {
@@ -200,7 +204,7 @@ export default class Main {
     // stuff to start after assets
     EventManager.instance.once("assetsLoaded", () => {
       Env.init();
-      this.screen = GameMode.MAIN_MENU;
+      ScreenManager.screen = GameMode.MAIN_MENU;
     });
 
     // start loop

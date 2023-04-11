@@ -22,12 +22,26 @@ export default class ScreenManager {
             this.draw();
         }, 0);
 
+        EventManager.instance.on("update", () => {
+            this.update();
+        }, 0);
+
         ScreenManager.instance.screens.set(GameMode.MAIN_MENU, new MainMenu());
         ScreenManager.instance.screens.set(GameMode.IN_GAME, new InGame());
     }
     
     public static draw(): void {
         this.instance.screens.get(main.screen)?.draw();
+    }
+
+    public static update(): void {
+        this.instance.screens.get(main.screen)?.update();
+    }
+
+    public static set screen(id: GameMode) {
+        this.instance.screens.get(main.screen)?.onExit();
+        main.screen = id;
+        this.instance.screens.get(main.screen)?.onEnter();
     }
 
 }

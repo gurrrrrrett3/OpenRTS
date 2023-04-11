@@ -37,4 +37,31 @@ export default class Utils {
       y: Math.floor(worldPosition.y / Tilemap.TILE_SIZE),
     };
   }
+
+  public static fitText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number,
+    font: string,
+    startFontSize?: number
+  ): string[] {
+    let fontSize = startFontSize || 20;
+    let lines: string[] = text.split("\n");
+
+    while (true) {
+      ctx.font = `${fontSize}px ${font}`;
+
+      let longestLine = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const lineWidth = ctx.measureText(lines[i]).width;
+        if (lineWidth > maxWidth) longestLine = lineWidth;
+      }
+
+      if (longestLine <= maxWidth) break;
+
+      fontSize--;
+    }
+
+    return lines;
+  }
 }

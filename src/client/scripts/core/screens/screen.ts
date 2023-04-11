@@ -11,5 +11,8 @@ export default abstract class Screen {
   public draw(): void {
     this.layout.draw();
   }
-  
+
+  public update(): void {
+    this.layout.update();
+  }
 }

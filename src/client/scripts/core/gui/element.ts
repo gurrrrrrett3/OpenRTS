@@ -5,7 +5,29 @@ export default abstract class Element {
   public y: number = 0;
   public width: number = 0;
   public height: number = 0;
+  public cursor: string = "default";
 
+  public get realX(): number {
+    return (this.x / 100) * main.width;
+  }
+
+  public get realY(): number {
+    return (this.y / 100) * main.height;
+  }
+
+  public get realWidth(): number {
+    return (this.width / 100) * main.width;
+  }
+
+  public get realHeight(): number {
+    return (this.height / 100) * main.height;
+  }
+
+  /**
+   * Set the position of the element
+   * @param x The percentage of the screen width
+   * @param y The percentage of the screen height
+   */
   public setPos(x: number, y: number): void {
     this.x = x;
     this.y = y;
@@ -19,19 +41,14 @@ export default abstract class Element {
   public abstract draw(): void;
   public abstract update(): void;
 
-  public updateAndDraw(): void {
-    this.update();
-    this.draw();
-  }
-
   public abstract onClick(): void;
 
   public isHovered(): boolean {
     return (
-      main.mouseX >= this.x &&
-      main.mouseX <= this.x + this.width &&
-      main.mouseY >= this.y &&
-      main.mouseY <= this.y + this.height
+      main.mouseX >= this.realX &&
+      main.mouseX <= this.realX + this.realWidth &&
+      main.mouseY >= this.realY &&
+      main.mouseY <= this.realY + this.realHeight
     );
   }
 
